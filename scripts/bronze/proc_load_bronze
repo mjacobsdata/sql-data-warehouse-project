@@ -1,6 +1,8 @@
 /*
 This Stored procedure loads data from external csv.
 
+truncates tables before loading during a bulk insert.
+
 Usage example : run EXEC bronze.load_bronze
 */
 
