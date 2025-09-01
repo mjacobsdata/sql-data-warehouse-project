@@ -1,0 +1,44 @@
+SELECT 
+prd_id,
+prd_key,
+REPLACE(SUBSTRING(prd_key, 1, 5), '-', '_') AS cat_id, 
+-- column, left of first position, 5 characters , so CO-RF-FR-R92B-58 becomes CO-RF
+--Replace - with _
+SUBSTRING(prd_key, 7, LEN(prd_key)) as prd_key,  -- from the 7th position to the end using the length of the column as they have different values
+prd_name,
+ISNULL(prd_cost,0),
+CASE UPPER(TRIM(prd_line))
+	 WHEN 'M' THEN 'Mountain'
+	 WHEN 'R' THEN 'Road'
+	 WHEN 'S' THEN 'Other Sales'
+	 WHEN 'T' THEN 'Touring'
+ELSE 'unknown' END as prd_line,
+prd_start_date,
+prd_end_date
+FROM bronze.crm_prd_info
+
+--Data Consistency
+SELECT DISTINCT prd_line
+FROM bronze.crm_prd_info 
+
+--check for unwanted spaces
+SELECT prd_name
+FROM bronze.crm_prd_info
+WHERE prd_name != TRIM(prd_name)
+
+--check numbers
+SELECT prd_cost
+FROM bronze.crm_prd_info
+WHERE prd_cost < 0 OR prd_cost IS NULL
+
+--check with erp table for relation join look at diagram, add to starting query above
+WHERE REPLACE(SUBSTRING(prd_key, 1, 5), '-', '_') NOT IN
+(SELECT 
+distinct id   --id does not match cat_id uses underscore instead of minus
+FROM bronze.erp_px_cat_g1v2   
+)
+
+--check invalid date orders 
+SELECT * 
+FROM bronze.crm_prd_info
+WHERE prd_end_date<prd_start_date
