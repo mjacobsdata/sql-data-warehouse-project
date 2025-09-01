@@ -1,0 +1,44 @@
+--Ceck primary key for dupes
+
+SELECT 
+cust_id,
+COUNT(*)
+FROM silver.crm_cust_info
+GROUP BY cust_id
+HAVING COUNT(*)>1 OR cust_id IS NULL
+
+SELECT  
+* 
+FROM(
+	SELECT*,
+	ROW_NUMBER() OVER (PARTITION BY cust_id ORDER BY cust_create_date DESC) as flag_last
+	FROM silver.crm_cust_info
+)m 
+WHERE flag_last =1 OR cust_id IS NULL --making sure we are not grabbing the duplicate primary keys instead just the most recent
+
+
+--Data Standardization & Consistency
+
+SELECT DISTINCT cust_gender FROM silver.crm_cust_info
+
+-- CHeck for unwanted spaces in each vairiable
+
+SELECT
+cust_firstname 
+FROM silver.crm_cust_info
+WHERE cust_firstname != TRIM(cust_firstname)   -- if og value does not equal the value after trimmming then inconsistencies;15
+
+
+
+SELECT
+cust_lastname 
+FROM silver.crm_cust_info
+WHERE cust_lastname != TRIM(cust_lastname)   -- if og value does not equal the value after trimmming then inconsistencies;17
+
+SELECT
+cust_gender
+FROM silver.crm_cust_info
+WHERE cust_gender != TRIM(cust_gender)
+
+
+SELECT * FROM silver.crm_cust_info
